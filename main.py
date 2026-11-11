@@ -1,10 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import filedialog
 import pygame
 from mutagen.mp3 import MP3
 from tkinterdnd2 import DND_FILES, TkinterDnD
 import os
 import shutil
+import json
 
 janela = TkinterDnD.Tk()
 
@@ -102,6 +104,34 @@ caixa_baixo.pack(fill = "both", expand = True) # expand = True e fill = "both" d
 
 # -------------------------------------------------------------------------------------------------------------
 
+CONFIG_FILE = "config.json"
+
+def ler_config():
+    if os.path.exists(CONFIG_FILE):
+        with open (CONFIG_FILE, "r", encoding = "UTF-8") as arquivo:
+            return json.load(arquivo)
+
+    return {"music_folder" : None}
+
+config = ler_config()
+
+def editar_config(config):
+    with open(CONFIG_FILE, "w", encoding = "UTF-8") as arquivo:
+        json.dump(config, arquivo, indent = 4)
+
+def selecionar_pasta(evento = None):
+    pasta = filedialog.askdirectory(title = "Escolha a sua pasta de áudios")
+    
+    if pasta:
+        config["music_folder"] = pasta
+
+    editar_config(config)
+    carregar_musicas(pasta)
+
+janela.bind("<Control-o>", selecionar_pasta)
+
+# -------------------------------------------------------------------------------------------------------------
+
 FORMATOS_SUPORTADOS = (".mp3")
 
 lista = tk.Listbox(caixa_baixo, bd = 0, highlightthickness = 0, selectbackground="gray6", **estilo_textos)
@@ -118,7 +148,6 @@ tempo_total = 0 # Variável para ver e ajustar o tempo total dos arquivos
 tempo_iniciada = 0 # conta o tempo da música
 
 def selecionado(evento):
-
     global tocando
     global tempo_total
     global tempo_iniciada
