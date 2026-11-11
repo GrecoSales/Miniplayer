@@ -20,12 +20,15 @@ janela.resizable(False, False) # O usuário não pode arrastar as bordas da jane
 
 pygame.mixer.init()
 
+Pasta = tk.PhotoImage(file = "layers/pasta.png")
+
 Retornar = tk.PhotoImage(file = "layers/Retornar.png")
 Pausar = tk.PhotoImage(file = "layers/Pausar.png")
 Avançar = tk.PhotoImage(file = "layers/Avançar.png")
 Drag_and_Drop = tk.PhotoImage(file = "layers/adicionar_arquivo.png")
 
 # -------------------------------------------------------------------------------------------------------------
+        # TIPOS DE ESTILOS PERSONALIZADOS DO MINIPLAYER
 
 # Altera o estilo dos dois frames de uma vez, apenas mencionando o depois
 estilo_frames = {
@@ -76,9 +79,28 @@ estilo_barra_progresso.configure(
 )
 
 # -------------------------------------------------------------------------------------------------------------
+        # SEPARAÇÂO ENTRE AS JANELAS COM E SEM PASTA CONFIGURADA
 
-frame_esquerdo = tk.Frame(janela, width = 300, **estilo_frames)
-frame_direito = tk.Frame(janela, width = 500, **estilo_frames)
+janela_inicial = tk.Frame(janela, bg = "gray15")
+janela_player = tk.Frame(janela)
+
+def exibir_início(): # Mostra a janela de seleção de pasta
+    janela_player.pack_forget()
+    janela_inicial.pack(fill = "both", expand = True)
+
+def exibir_player(): # Mostra a janela principal do Miniplayer
+    janela_inicial.pack_forget()
+    janela_player.pack(fill = "both", expand = True)
+
+frame_de_introdução = tk.Label(janela_inicial, image = Pasta, text = "Clique para inserir uma pasta com áudios", compound = "top", **estilo_textos, cursor = "hand2")
+
+frame_de_introdução.pack(expand = True)
+
+# -------------------------------------------------------------------------------------------------------------
+        # INSTÂNCIA DOS FRAMES ESQUERDO E DIREITO
+
+frame_esquerdo = tk.Frame(janela_player, width = 300, **estilo_frames)
+frame_direito = tk.Frame(janela_player, width = 500, **estilo_frames)
 
 # Impede que o frame encolha para o tamanho do conteúdo
 frame_esquerdo.pack_propagate(False)
@@ -89,6 +111,7 @@ frame_esquerdo.pack(side = "left", fill = "y")
 frame_direito.pack(side = "left", fill = "y")
 
 # -------------------------------------------------------------------------------------------------------------
+        # INSTÂNCIA DOS ELEMENTOS DO FRAME ESQUERDO
 
 caixa_cima = tk.Frame(frame_esquerdo, bg = "gray15")
 separador1 = tk.Frame(frame_esquerdo, bg = "#164FD2", height=3)
@@ -103,6 +126,7 @@ separador1.pack(fill = "x") # fill = "x" preenche até chegar na extrema direita
 caixa_baixo.pack(fill = "both", expand = True) # expand = True e fill = "both" determinam que o conteúdo deve se expandir até o limite
 
 # -------------------------------------------------------------------------------------------------------------
+        # CONFIGURAÇÕES E SELEÇÃO DE PASTA
 
 CONFIG_FILE = "config.json"
 
@@ -123,23 +147,28 @@ def selecionar_pasta(evento = None):
     pasta = filedialog.askdirectory(title = "Escolha a sua pasta de áudios")
     
     if pasta:
-        config["music_folder"] = pasta
+        config["music_folder"] = pasta # o valor dentro do "music_folder" no json, será igual ao valor da variável pasta
+        editar_config(config)
+        carregar_audios(pasta)
+        exibir_player()
 
-    editar_config(config)
-    carregar_musicas(pasta)
+frame_de_introdução.bind("<Button-1>", selecionar_pasta) # Na janela inicial é capaz de clicar para selecionar a pasta
 
 janela.bind("<Control-o>", selecionar_pasta)
 
 # -------------------------------------------------------------------------------------------------------------
+        # LISTA DE ÁUDIOS E REPRODUÇÃO
 
 FORMATOS_SUPORTADOS = (".mp3")
 
 lista = tk.Listbox(caixa_baixo, bd = 0, highlightthickness = 0, selectbackground="gray6", **estilo_textos)
-sons = os.listdir("audios") #***
 
-for item in sons:
-    if item.lower().endswith(FORMATOS_SUPORTADOS):
-        lista.insert(tk.END, item)
+def carregar_audios(pasta):
+    lista.delete(0, tk.END)
+
+    for arquivo in os.listdir(pasta):
+        if arquivo.lower().endswith(FORMATOS_SUPORTADOS):
+            lista.insert(tk.END, arquivo)
 
 tocando = False # Permite que .play, .pause e .unpause trabalhem adequadamente
 
@@ -156,7 +185,7 @@ def selecionado(evento):
 
     if atual:
         arquivo = lista.get(atual)
-        caminho = f"audios/{arquivo}"
+        caminho = os.path.join(config["music_folder"], arquivo)
         pygame.mixer.music.load(caminho)
         tempo_iniciada = 1
         pygame.mixer.music.play()
@@ -174,6 +203,7 @@ scrollbar.pack(side = "right", fill = "y")
 lista.pack(padx = 7, pady = 5, fill = "both", expand = True)
 
 # -------------------------------------------------------------------------------------------------------------
+        # ARRASTAR E SOLTAR ARQUIVOS PARA A PASTA SELECIONADA
 
 adicionar_arquivo = tk.Label(lista, bg = "steel blue", bd = 0, highlightthickness = 0, image = Drag_and_Drop, text = "Adicionar arquivo", fg = "black", font = ("Arial", 13, "bold"), padx = 1, compound = "top")
 
@@ -195,7 +225,7 @@ def arrastar_e_soltar(evento):
     adicionar_arquivo.place_forget()
 
     if caminho.lower().endswith(FORMATOS_SUPORTADOS):
-        shutil.copy2(caminho, "audios")
+        shutil.copy2(caminho, config["music_folder"])
         lista.insert(tk.END, arquivo)
         mostrar_mensagem(transferência_aceita)
     
@@ -341,6 +371,18 @@ separador2.pack(fill = "x")
 direita_meio.pack(fill = "both", expand = True)
 separador3.pack(fill = "x")
 direita_baixo.pack(side = "bottom", fill = "x", pady = 10)
+
+# -------------------------------------------------------------------------------------------------------------
+    # TRANSIÇÃO ENTRE AS JANELAS
+
+if config["music_folder"] and os.path.isdir(config["music_folder"]):
+    carregar_audios(config["music_folder"])
+    exibir_player()
+
+else:
+    config["music_folder"] = None
+    editar_config(config)
+    exibir_início()
 
 # -------------------------------------------------------------------------------------------------------------
 
