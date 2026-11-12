@@ -1,2 +1,24 @@
-.vscode
+.vscode/
+
 miniplayer.bat
+prints/
+audios/
+config.json
+
+*.log
+
+# Ambientes virtuais
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# PyInstaller
+build/
+dist/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db

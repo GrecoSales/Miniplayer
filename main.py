@@ -7,10 +7,17 @@ from tkinterdnd2 import DND_FILES, TkinterDnD
 import os
 import shutil
 import json
+import sys
+from pathlib import Path
 
 janela = TkinterDnD.Tk()
 
-ícone = tk.PhotoImage(file="layers/icone_player.png")
+BASE_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+
+def caminho_recurso(arquivo):
+    return BASE_DIR / arquivo
+
+ícone = tk.PhotoImage(file = str(caminho_recurso("layers/icone_player.png")))
 janela.iconphoto(False, ícone)
 
 janela.title("Miniplayer") # Muda o título exibido na barra superior
@@ -20,12 +27,12 @@ janela.resizable(False, False) # O usuário não pode arrastar as bordas da jane
 
 pygame.mixer.init()
 
-Pasta = tk.PhotoImage(file = "layers/pasta.png")
+Pasta = tk.PhotoImage(file = str(caminho_recurso("layers/pasta.png")))
 
-Retornar = tk.PhotoImage(file = "layers/Retornar.png")
-Pausar = tk.PhotoImage(file = "layers/Pausar.png")
-Avançar = tk.PhotoImage(file = "layers/Avançar.png")
-Drag_and_Drop = tk.PhotoImage(file = "layers/adicionar_arquivo.png")
+Retornar = tk.PhotoImage(file = str(caminho_recurso("layers/Retornar.png")))
+Pausar = tk.PhotoImage(file = str(caminho_recurso("layers/Pausar.png")))
+Avançar = tk.PhotoImage(file = str(caminho_recurso("layers/Avançar.png")))
+Drag_and_Drop = tk.PhotoImage(file = str(caminho_recurso("layers/adicionar_arquivo.png")))
 
 # -------------------------------------------------------------------------------------------------------------
         # TIPOS DE ESTILOS PERSONALIZADOS DO MINIPLAYER
@@ -111,7 +118,7 @@ frame_esquerdo.pack(side = "left", fill = "y")
 frame_direito.pack(side = "left", fill = "y")
 
 # -------------------------------------------------------------------------------------------------------------
-        # INSTÂNCIA DOS ELEMENTOS DO FRAME ESQUERDO
+        # CRIAÇÃO E INSTÂNCIA DOS ELEMENTOS DO FRAME ESQUERDO
 
 caixa_cima = tk.Frame(frame_esquerdo, bg = "gray15")
 separador1 = tk.Frame(frame_esquerdo, bg = "#164FD2", height=3)
@@ -128,14 +135,23 @@ caixa_baixo.pack(fill = "both", expand = True) # expand = True e fill = "both" d
 # -------------------------------------------------------------------------------------------------------------
         # CONFIGURAÇÕES E SELEÇÃO DE PASTA
 
-CONFIG_FILE = "config.json"
+APPDATA_DIR = Path(os.getenv("APPDATA") or Path.home() / "AppData" / "Roaming")
+CONFIG_DIR = APPDATA_DIR / "Miniplayer"
+
+CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+
+CONFIG_FILE = CONFIG_DIR / "config.json"
 
 def ler_config():
-    if os.path.exists(CONFIG_FILE):
-        with open (CONFIG_FILE, "r", encoding = "UTF-8") as arquivo:
-            return json.load(arquivo)
+    try:
+        if CONFIG_FILE.exists():
+            with open (CONFIG_FILE, "r", encoding = "UTF-8") as arquivo:
+                return json.load(arquivo)
 
-    return {"music_folder" : None}
+    except(json.JSONDecodeError, OSError):
+        pass
+
+    return {"music_folder": None}
 
 config = ler_config()
 
@@ -147,7 +163,10 @@ def selecionar_pasta(evento = None):
     pasta = filedialog.askdirectory(title = "Escolha a sua pasta de áudios")
     
     if pasta:
+        pygame.mixer.music.stop()
+
         config["music_folder"] = pasta # o valor dentro do "music_folder" no json, será igual ao valor da variável pasta
+        
         editar_config(config)
         carregar_audios(pasta)
         exibir_player()
@@ -203,7 +222,7 @@ scrollbar.pack(side = "right", fill = "y")
 lista.pack(padx = 7, pady = 5, fill = "both", expand = True)
 
 # -------------------------------------------------------------------------------------------------------------
-        # ARRASTAR E SOLTAR ARQUIVOS PARA A PASTA SELECIONADA
+        # DRAG AND DROP E SUAS ANIMAÇÕES
 
 adicionar_arquivo = tk.Label(lista, bg = "steel blue", bd = 0, highlightthickness = 0, image = Drag_and_Drop, text = "Adicionar arquivo", fg = "black", font = ("Arial", 13, "bold"), padx = 1, compound = "top")
 
@@ -262,6 +281,7 @@ lista.dnd_bind("<<DropLeave>>", icone_desliga)
 lista.dnd_bind('<<Drop>>', arrastar_e_soltar)
 
 # -------------------------------------------------------------------------------------------------------------
+        # CRIAÇÃO DOS ELEMENTOS DO FRAME DIREITO
 
 direita_cima = tk.Frame(frame_direito, bg = "gray15")
 separador2 = tk.Frame(frame_direito, bg = "#164FD2", height=3)
@@ -270,6 +290,7 @@ separador3 = tk.Frame(frame_direito, bg = "#164FD2", height=3)
 direita_baixo = tk.Frame(frame_direito, bg = "gray15")
 
 # -------------------------------------------------------------------------------------------------------------
+        # BOTÕES DE CONTROLE DE REPRODUÇÃO
 
 caixa_botões = tk.Label(direita_meio, bg = "gray11")
 
@@ -323,6 +344,7 @@ botão_mais10.pack(side = "left", padx = 5)
 caixa_botões.pack(expand = True)
 
 # -------------------------------------------------------------------------------------------------------------
+        # TEMPO E BARRA DE PROGRESSO
 
 def atualizar_tempo():
 
@@ -365,6 +387,7 @@ relógio = tk.Label(direita_baixo, text = "00:00 / 00:00", **estilo_textos) # Mo
 relógio.pack()
 
 # -------------------------------------------------------------------------------------------------------------
+        # INSTÂNCIA DOS ELEMENTOS DO FRAME DIREITO
 
 direita_cima.pack(anchor = "nw")
 separador2.pack(fill = "x")
