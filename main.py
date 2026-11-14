@@ -30,6 +30,7 @@ pygame.mixer.init()
 Pasta = tk.PhotoImage(file = str(caminho_recurso("layers/pasta.png")))
 
 Retornar = tk.PhotoImage(file = str(caminho_recurso("layers/Retornar.png")))
+Tocar = tk.PhotoImage(file = (str(caminho_recurso("layers/Tocar.png"))))
 Pausar = tk.PhotoImage(file = str(caminho_recurso("layers/Pausar.png")))
 Avançar = tk.PhotoImage(file = str(caminho_recurso("layers/Avançar.png")))
 Drag_and_Drop = tk.PhotoImage(file = str(caminho_recurso("layers/adicionar_arquivo.png")))
@@ -209,6 +210,7 @@ def selecionado(evento):
         tempo_iniciada = 1
         pygame.mixer.music.play()
         tocando = True
+        botão_play.config(image = Pausar)
 
         audio = MP3(caminho)
         tempo_total = int(audio.info.length)
@@ -317,9 +319,11 @@ def play():
         if tocando:
             pygame.mixer.music.pause()
             tocando = False
+            botão_play.config(image = Tocar)
         else:
             pygame.mixer.music.unpause()
             tocando = True
+            botão_play.config(image = Pausar)
 
 def avançar():
 
@@ -334,7 +338,7 @@ def avançar():
     pygame.mixer.music.play(start = tempo_iniciada)
 
 botão_menos10 = tk.Button(caixa_botões, bg = "gray11", activebackground = "gray11", bd = 0, relief = "flat", image = Retornar, command = retornar)
-botão_play = tk.Button(caixa_botões, bg = "gray11", activebackground = "gray11", bd = 0, relief = "flat", image = Pausar, command = play)
+botão_play = tk.Button(caixa_botões, bg = "gray11", activebackground = "gray11", bd = 0, relief = "flat", image = Tocar, command = play)
 botão_mais10 = tk.Button(caixa_botões, bg = "gray11", activebackground = "gray11", bd = 0, relief = "flat", image = Avançar, command = avançar)
 
 botão_menos10.pack(side = "left", padx = 5)

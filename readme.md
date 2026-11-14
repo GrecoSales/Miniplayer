@@ -12,9 +12,13 @@ Com uma interface gráfica discreta e funcionalidades essenciais, o Miniplayer b
 
 ### 📸 Capturas de tela
 
-<img src="assets/image 1.png" width="350">
-<img src="assets/image 2.png" width="350">
-<img src="assets/image 3.png" width="300">
+<table>
+  <tr>
+    <td><img src="assets/image1.png" width="350"></td>
+    <td><img src="assets/image2.png" width="350"></td>
+    <td><img src="assets/image3.png" width="300"></td>
+  </tr>
+</table>
 
 ## ⚙️ Funcionalidades
 
